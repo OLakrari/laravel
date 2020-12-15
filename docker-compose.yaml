@@ -1,0 +1,58 @@
+version: '3'
+
+#It's not really necessary to create a network since docker will automatically isolate services on the same docker-compose together :p
+networks:
+  laravel:
+
+
+services:
+  nginx:
+    image: nginx:stable-alpine 
+    container_name: nginx
+    volumes:
+     #- ./src/public:/usr/share/nginx/html
+     - ./src:/var/www/html
+     - ./nginx/default.conf:/etc/nginx/conf.f/default.conf
+    ports:
+     - "8092:80"
+    networks:
+     - laravel
+    depends_on:
+     - php
+     - mysql
+
+
+  mysql:
+    image: mysql:5.7.22
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+     - "4306:3306"
+    volumes:
+     - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: homestead
+      MYSQL_USER: homestead
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      SERVICE_TAG: test
+      SERVICE_NAME: mysql
+      #DB_SOCKET: /var/run/mysql/mysqld.sock
+    networks:
+     - laravel
+
+
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile 
+    container_name: php
+    volumes:
+     - ./src:/var/www/html
+    ports:
+     - "9000:9000"
+    networks:
+     - laravel
+    
